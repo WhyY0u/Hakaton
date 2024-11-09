@@ -1,0 +1,33 @@
+
+.header {
+    margin-top: 40px;
+    animation: topSlideIn 1s forwards; /* Запускаем анимацию */
+    transform: translateY(-100%);
+}
+
+.header__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.header__text__block {
+    color: rgb(240, 240, 240);
+    font-family: Inter;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+
+
+@keyframes topSlideIn {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0; /* Начальная непрозрачность */
+    }
+    100% {
+        transform: translateY(0); /* Конечное положение - в центре */
+        opacity: 1; /* Конечная непрозрачность */
+    }
+}
