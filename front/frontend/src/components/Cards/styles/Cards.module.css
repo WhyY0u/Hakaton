@@ -42,6 +42,7 @@
     font-size: 12px;
     color: rgba(254, 253, 253, 0.24);
     animation: init 1.0s forwards;
+    z-index: -1;
 }
 .cards__input__clicked {
     font-family: "Inter";   
