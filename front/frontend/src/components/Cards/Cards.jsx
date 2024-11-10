@@ -23,20 +23,63 @@ function Cards() {
   const [swipeDistance, setSwipeDistance] = useState(0); // Для хранения расстояния свайпа
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Изначально проверяем размер экрана
 
-  // Обновляем isMobile при изменении размера окна
+  const downloadFile = async (uuid, fileName) => {
+    console.log(fileName);
+    try {
+      const response = await axios.get(`http://localhost:8081/api/resumes/file?uuid=${encodeURIComponent(uuid)}&fileName=${encodeURIComponent(fileName)}`, {
+        responseType: 'blob',
+      });
+  
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName); // Используем оригинальное имя файла
+      document.body.appendChild(link);
+      link.click();
+  
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Ошибка при скачивании файла:", error);
+    }
+  };
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Если ширина экрана меньше или равна 768px, считаем это мобильным устройством
+      setIsMobile(window.innerWidth <= 768); 
     };
 
-    window.addEventListener('resize', handleResize); // Добавляем обработчик события изменения размера окна
+    window.addEventListener('resize', handleResize); 
 
     return () => {
-      window.removeEventListener('resize', handleResize); // Убираем обработчик при размонтировании компонента
+      window.removeEventListener('resize', handleResize); 
     };
-  }, []); // Пустой массив зависимостей, чтобы подписка происходила один раз
+  }, []); 
 
-  const handleBlur = (field) => {
+  const handleBlur = async (field) => {
+    const id = localStorage.getItem('id');
+    if(search.length != 0) {
+      await axios.get(`http://localhost:8081/api/resumes/search`, {
+        headers: { uuid: id },
+        params: { text: search }  
+    }).then(response => setData(response.data))
+      .catch(error => console.error(error));
+    } else {
+      axios.get("http://localhost:8081/api/resumes/getAllResume", {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "uuid": id,
+        },
+      })
+        .then(response => {
+          setData(response?.data); // Устанавливаем полученные данные
+          setLoading(false); // Завершаем процесс загрузки
+          console.log(response?.data)
+        })
+        .catch(err => {
+          setError('Ошибка загрузки данных'); // Обрабатываем ошибку
+          setLoading(false); // Завершаем процесс загрузки
+        });
+    }
     setIsFocused((prev) => ({
       ...prev,
       [field]: false,
@@ -76,13 +119,27 @@ function Cards() {
 
     return {
       border: `2px solid ${color}`,
+      boxShadow: `0 0px 10px rgba(${red}, ${green}, 0, 0.3)`,
     };
   }
 
-  // Функция для удаления карточки
   const handleRemoveCard = (index) => {
-    console.log(`Карточка ${index + 1} удалена!`);
-    // Логика для удаления карточки
+    const id = localStorage.getItem("id");
+    axios.delete("http://localhost:8081/api/resumes/remove", {
+      headers: {
+        uuid: id,
+        id: data?.resume[index].id, 
+      },
+    }).then(() => {
+      setData(prevData => {
+        const updatedResumes = prevData.resume.filter((_, idx) => idx !== index);
+        return {
+          ...prevData,
+          resume: updatedResumes, 
+        };
+      });
+    });
+    
   };
 
   // Обработчик для кликов по карточке
@@ -92,10 +149,10 @@ function Cards() {
       setClickTimeout(null);
       handleCardDoubleClick(index);
     } else {
-      // Одиночный клик
       setClickTimeout(
         setTimeout(() => {
           setClickTimeout(null);
+          downloadFile(localStorage.getItem("id"), data?.resume[index].name)
           console.log(`Открывается файл с индексом ${index}`); // Выводим в консоль индекс
         }, 300)
       );
@@ -103,13 +160,32 @@ function Cards() {
   };
 
   // Обработчик для двойного клика по карточке
-  const handleCardDoubleClick = (index) => {
-    if (favorites.includes(index)) {
-      setFavorites(favorites.filter((fav) => fav !== index));
-      console.log(`Карточка ${index + 1} удалена из избранного.`);
-    } else {
-      setFavorites([...favorites, index]);
-      console.log(`Карточка ${index + 1} добавлена в избранное.`);
+  const handleCardDoubleClick = async (index) => {
+    const card = data?.resume[index]; // Получаем данные карточки по индексу
+    const id = localStorage.getItem("id"); // Получаем uuid из localStorage
+  
+    try {
+      if (favorites.includes(index)) {
+        // Если карточка уже в избранном, удаляем ее из избранного с помощью DELETE
+        await axios.delete("http://localhost:8081/api/resumes/favorites/remove", {
+          headers: {
+            uuid: id,      // Передаем uuid пользователя
+            id: card.id,   // Передаем id карточки для удаления
+          },
+        });
+        setFavorites(favorites.filter((fav) => fav !== index)); // Обновляем локальное состояние
+        console.log(`Карточка ${index + 1} удалена из избранного.`);
+      } else {
+        // Если карточка не в избранном, добавляем ее с помощью POST
+        await axios.post("http://localhost:8081/api/resumes/favorites/add", {
+          resume_id: card.id, // Отправляем идентификатор карточки
+          uuid: id
+        });
+        setFavorites([...favorites, index]); // Обновляем локальное состояние
+        console.log(`Карточка ${index + 1} добавлена в избранное.`);
+      }
+    } catch (error) {
+      console.error("Ошибка при добавлении/удалении из избранного:", error);
     }
   };
 
@@ -124,6 +200,9 @@ function Cards() {
 
     const distance = e.touches[0].clientX - swipeStart; // Считаем расстояние по оси X
     setSwipeDistance(distance); // Обновляем текущее расстояние
+
+    const element = e.target;
+    element.style.transform = `translateX(${distance}px)`;
   };
 
   const handleTouchEnd = (index) => {
@@ -133,19 +212,32 @@ function Cards() {
     // Обнуляем значения после завершения свайпа
     setSwipeStart(null);
     setSwipeDistance(0);
+
+  const element = document.querySelector(`.swipe-card-${index}`);
+  if (element) {
+    element.style.transform = 'translateX(0)'; // Сбрасываем позицию элемента
+  }
   };
 
+
   useEffect(() => {
+    const id = localStorage.getItem("id");
+
+    if (!id) {
+      setError("ID не найден. Пожалуйста, авторизуйтесь.");
+      return;
+    }
+
     axios.get("http://localhost:8081/api/resumes/getAllResume", {
       headers: {
         "Content-Type": "multipart/form-data",
-        "uuid": "0bf4ff92-dea8-4860-b058-1ee2265f48bd",
+        "uuid": id,
       },
     })
       .then(response => {
-        console.log(response.data?.resume)
         setData(response?.data); // Устанавливаем полученные данные
         setLoading(false); // Завершаем процесс загрузки
+        console.log(response?.data)
       })
       .catch(err => {
         setError('Ошибка загрузки данных'); // Обрабатываем ошибку
@@ -159,11 +251,9 @@ function Cards() {
       <div className={`${styles.cards__container} _container`}>
         <div className={styles.cards__search__block}>
           <div
-            className={`${
-              isFocused.search || !isSearchEmpty()
-                ? styles.cards__input__block__whole
-                : styles.cards__input__block
-            }`}
+            className={
+                 styles.cards__input__block
+            }
           >
             <input
               onFocus={() => handleFocus('search')}
@@ -171,25 +261,29 @@ function Cards() {
               value={search}
               onChange={handleSearchChange}
               className={`${
-                isFocused.search || !isSearchEmpty()
-                  ? styles.cards__input__clicked
-                  : styles.cards__input__not__clicked
+                  styles.cards__input__clicked
+                 
               }`}
               name="search"
               type="text"
             />
-            {isFocused.search || isSearchEmpty() && <img className={styles.search__loop} src={loop} alt="" /> }
+            {isFocused.search || isSearchEmpty() && <p onChange={() => setIsFocused(prevState => ({
+  ...prevState,
+  search: true,
+}))} className={styles.vedite}>Мне нужен...</p> }
+            {isFocused.search || isSearchEmpty() && <img  onClick={() => setIsFocused(prevState => ({
+  ...prevState,
+  search: true,
+}))} className={styles.search__loop} src={loop} alt="" />}
           </div>
-          {isFocused.search || isSearchEmpty() && <div className={styles.search__text}>Отобрaно 3.495 из 20.000</div>}
-          {isFocused.search || isSearchEmpty() && (
             <Link to={'/savedcards-page'}>
               <img className={styles.search__saved} src={saved} alt="" />
             </Link>
-          )}
         </div>
 
         <div className={styles.cards__main__block}>
           {data?.resume?.map((card, index) => 
+            
            <CardItem
            key={index}
            card={card}
@@ -202,6 +296,7 @@ function Cards() {
            favorites={favorites}
            handleRemoveCard={handleRemoveCard}
            getColor={getColor}
+           setFavorites={setFavorites}
        />
       )}
         </div>

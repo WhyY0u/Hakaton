@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -14,9 +16,12 @@ import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -51,18 +56,40 @@ public class ResumeControll {
 public ResponseEntity<?> getResume(@RequestHeader String uuid, @PageableDefault(size = 10, sort = "sum", direction = Sort.Direction.DESC) Pageable pageable) {
     Page<ResumeEntity> resumes = resumeService.findPageResumeByUUID(uuid, pageable);
     List<ResumeResponse> sortedResumes = resumes.getContent().stream()
-    .map(resume -> new ResumeResponse(
+    .map(resume -> {
+        
+        return new ResumeResponse(
             resume.getId(),
             resume.getName(),
             resume.getDescription(),
             resume.getSum(),
-            false))  
+            resumeService.findResumeEntityFavoritesByResume_ID(resume.getId()) != null);
+    })  
     .collect(Collectors.toList());
     HashMap<String, Object> map = new HashMap<>();
     map.put("resume", sortedResumes);
     map.put("totalPages", resumes.getTotalPages());
 
     return ResponseEntity.ok(map);
+}
+
+@GetMapping("/file")
+public ResponseEntity<org.springframework.core.io.Resource> getFile(@RequestParam String uuid, @RequestParam String fileName) {
+    try {
+        Path filePath = Paths.get(FileUtils.getPathDir() + uuid + "/", fileName).normalize();
+        org.springframework.core.io.Resource resource = new UrlResource(filePath.toUri());
+        if (resource.exists()) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
 }
 
 @GetMapping("/search")
@@ -83,7 +110,7 @@ public ResponseEntity<?> searchResume(@RequestHeader String uuid, @RequestParam 
 }
 
 @GetMapping("/favorites/search")
-public ResponseEntity<?> searchFavorites(@RequestHeader String uuid, @RequestParam String text, @PageableDefault(size = 10, sort = "sum", direction = Sort.Direction.DESC) Pageable pageable) {
+public ResponseEntity<?> searchFavorites(@RequestHeader String uuid, @RequestParam String text, @PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable) {
     Page<ResumeEntityFavorites> resumes = resumeService.searchFavoritesByUuidAndText(uuid, text, pageable);
     List<ResumeResponse> sortedResumes = resumes.getContent().stream()
     .map(resume -> {
@@ -141,11 +168,14 @@ public ResponseEntity<?> removeResume(@RequestHeader String uuid, @RequestHeader
 @PostMapping("/favorites/add")
 public ResponseEntity<?> addFavorites(@RequestBody AddFavoritesRequest request) {
     ResumeEntity entity = resumeService.findResumeById(request.getResume_id());
+
     if(entity != null) {
-    ResumeEntityFavorites entityfavorites = new ResumeEntityFavorites();
-    entityfavorites.setResume(entity);
-    entityfavorites.setUuid(entity.getUuid());
-    resumeService.saveRepositoryFavorites(entityfavorites);
+        if(resumeService.findResumeEntityFavoritesByResume_ID(entity.getId()) == null) {
+         ResumeEntityFavorites entityfavorites = new ResumeEntityFavorites();
+         entityfavorites.setResume(entity);
+         entityfavorites.setUuid(entity.getUuid());
+         resumeService.saveRepositoryFavorites(entityfavorites);
+        }
     return ResponseEntity.ok("Ok");
     }
     return ResponseEntity.notFound().build();
