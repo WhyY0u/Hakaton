@@ -74,23 +74,23 @@ public ResponseEntity<?> getResume(@RequestHeader String uuid, @PageableDefault(
 }
 
 @GetMapping("/file")
-    public ResponseEntity<org.springframework.core.io.Resource> getFile(@RequestHeader String uuid, @RequestHeader String fileName) {
-        try {
-            Path filePath = Paths.get(FileUtils.getPathDir() + uuid + "/", fileName).normalize();
-            org.springframework.core.io.Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists()) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"");
-                return ResponseEntity.ok()
-                        .headers(headers)
-                        .body(resource);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+public ResponseEntity<org.springframework.core.io.Resource> getFile(@RequestParam String uuid, @RequestParam String fileName) {
+    try {
+        Path filePath = Paths.get(FileUtils.getPathDir() + uuid + "/", fileName).normalize();
+        org.springframework.core.io.Resource resource = new UrlResource(filePath.toUri());
+        if (resource.exists()) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
+}
 
 @GetMapping("/search")
 public ResponseEntity<?> searchResume(@RequestHeader String uuid, @RequestParam String text, @PageableDefault(size = 10, sort = "sum", direction = Sort.Direction.DESC) Pageable pageable) {

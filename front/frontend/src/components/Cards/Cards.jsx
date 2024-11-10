@@ -22,19 +22,38 @@ function Cards() {
   const [swipeStart, setSwipeStart] = useState(null); // Для отслеживания начала свайпа
   const [swipeDistance, setSwipeDistance] = useState(0); // Для хранения расстояния свайпа
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Изначально проверяем размер экрана
+
+  const downloadFile = async (uuid, fileName) => {
+    console.log(fileName);
+    try {
+      const response = await axios.get(`http://localhost:8081/api/resumes/file?uuid=${encodeURIComponent(uuid)}&fileName=${encodeURIComponent(fileName)}`, {
+        responseType: 'blob',
+      });
   
-  // Обновляем isMobile при изменении размера окна
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName); // Используем оригинальное имя файла
+      document.body.appendChild(link);
+      link.click();
+  
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Ошибка при скачивании файла:", error);
+    }
+  };
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Если ширина экрана меньше или равна 768px, считаем это мобильным устройством
+      setIsMobile(window.innerWidth <= 768); 
     };
 
-    window.addEventListener('resize', handleResize); // Добавляем обработчик события изменения размера окна
+    window.addEventListener('resize', handleResize); 
 
     return () => {
-      window.removeEventListener('resize', handleResize); // Убираем обработчик при размонтировании компонента
+      window.removeEventListener('resize', handleResize); 
     };
-  }, []); // Пустой массив зависимостей, чтобы подписка происходила один раз
+  }, []); 
 
   const handleBlur = async (field) => {
     const id = localStorage.getItem('id');
@@ -130,10 +149,10 @@ function Cards() {
       setClickTimeout(null);
       handleCardDoubleClick(index);
     } else {
-      // Одиночный клик
       setClickTimeout(
         setTimeout(() => {
           setClickTimeout(null);
+          downloadFile(localStorage.getItem("id"), data?.resume[index].name)
           console.log(`Открывается файл с индексом ${index}`); // Выводим в консоль индекс
         }, 300)
       );
