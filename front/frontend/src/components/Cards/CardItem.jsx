@@ -15,12 +15,16 @@ const CardItem = ({
     favorites,
     handleRemoveCard,
     getColor,
+    setFavorites,
 }) => {
-    console.log(card);
-    console.log("INDEX:" + index);
     const cardRef = useRef(null); 
     const [isVisible, setIsVisible] = useState(false); 
+    const [isRmove, setRmove] = useState(false);
+  
     useEffect(() => {
+        if(card.favorites) {
+        setFavorites([...favorites, index]);
+        }
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
@@ -42,10 +46,19 @@ const CardItem = ({
             }
         };
     }, [index]);
+
+    const handleClick = (e, index) => {
+      setRmove(true);
+      setTimeout(() => {
+        console.log("wooooork")
+          handleRemoveCard(index); 
+        }, 2000);
+      };
     return (
+        
         <div
             ref={cardRef}
-            className={`${styles.card}`  + " " + (isVisible ? styles.card_visible : "")}
+            className={`${styles.card}` + " " + (isVisible ? styles.card_visible : " ") + " " + (isRmove ? (isMobile ?  styles.removecard_moblie : styles.removecard_pc): " ")}
             style={{ animationDelay: `${index * 0.3}s` }}
             onClick={() => handleCardClick(index)}
             onTouchStart={handleTouchStart}
@@ -69,10 +82,7 @@ const CardItem = ({
                 <img
                     src={trash}
                     className={styles.deleteButton}
-                    onClick={(e) => {
-                        e.stopPropagation(); // Чтобы не вызывался click-обработчик карточки
-                        handleRemoveCard(index);
-                    }}
+                    onClick={(e) => handleClick(e, index)}
                 />
             )}
 

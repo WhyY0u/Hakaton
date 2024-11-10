@@ -1,10 +1,12 @@
+* {
+    user-select: none;
 
+}
 .cards {
     margin-top: 30px;
 }
 
 .cards__container {
-
 }
 
 .cards__search__block {
@@ -50,15 +52,35 @@
 .cards__input__clicked {
     font-family: "Inter";   
     color: var(--input-color);
-    font-size: 15px;
+    height: 34px;
+    font-size: 10px;
+    width: 245px;
     background-color: rgba(0, 0, 0, 0.26);
     padding: 8px;
     border: rgba(255, 255, 255, 0.03);
     border-radius: 8px;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.41);
     backdrop-filter: blur(7px);
-    width: 100%;
     transition: width 0.5s ease;
+}
+@keyframes init {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+.vedite {
+    position: absolute;
+    top: 11px;
+    left: 29px;
+    font-family: "Inter";
+    font-weight: 100px;
+    font-size: 12px;
+    color: rgba(254, 253, 253, 0.24);
+    animation: init 1.0s forwards;
 }
 
 .cards__input__not__clicked {
@@ -75,9 +97,11 @@
 
 .search__loop {
     position: absolute;
-    left: 10px;
-    top: 5px;
+    width: 17px;
+    left: 9px;
+    top: 8px;
     z-index: 1;
+    animation: init 1.0s forwards;
 }
 
 .cards__main__block {

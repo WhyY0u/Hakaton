@@ -24,18 +24,39 @@
     width: 90%;
 }
 
+@keyframes init {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+.vedite {
+    position: absolute;
+    top: 11px;
+    left: 33px;
+    font-family: "Inter";
+    font-weight: 100px;
+    font-size: 12px;
+    color: rgba(254, 253, 253, 0.24);
+    animation: init 1.0s forwards;
+}
 .cards__input__clicked {
     font-family: "Inter";   
     color: var(--input-color);
-    font-size: 15px;
-    background-color: rgba(0, 0, 0, 0.26);
     padding: 8px;
-    border: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.41);
+    height: 34px;
+    width: 245px;
 
-    width: 100%;
-    transition: width 0.5s ease;
+     font-size: 10px;
+     background-color: rgba(0, 0, 0, 0.26);
+     border: rgba(255, 255, 255, 0.03);
+     border-radius: 8px;
+     box-shadow: 0 0 4px rgba(0, 0, 0, 0.41);
+     backdrop-filter: blur(7px);
+     transition: width 0.5s ease;
 }
 
 .cards__input__not__clicked {
@@ -54,9 +75,10 @@
 .search__loop {
     position: absolute;
     left: 10px;
-    top: 5px;
+    top: 7px;
     z-index: 0;
     transition: width 0.5s ease;
+    animation: init 1.0s forwards;
 }
 
 .search__text {
@@ -104,13 +126,14 @@
     position: relative;
     border-radius: 10px;
     opacity: 0;
+    width: 315px;
 }
 .card::after {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 315px;
     height: 100%;
     backdrop-filter: blur(8px);
     opacity: 0.65;
@@ -128,7 +151,6 @@
     border-radius: 10px;
     padding: 10px;
     backdrop-filter: blur(10px);
-
 }
 
 .card__fio__rate {
@@ -193,5 +215,49 @@
     color: white;
     border: none;
     border-radius: 5px;
+    z-index: 2;
+}
+.deleteButton:hover {
     cursor: pointer;
+}
+
+@keyframes pc_remove {
+    0% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    70% {
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.0);
+
+    }
+}
+@keyframes mobile_remove {
+    0% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    70% {
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.0);
+
+    }
+}
+.removecard_moblie {
+    animation: mobile_remove 0.7s forwards; 
+}
+.removecard_pc {
+    animation: pc_remove 0.7s forwards; 
 }
