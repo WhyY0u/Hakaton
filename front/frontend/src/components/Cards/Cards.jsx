@@ -6,8 +6,12 @@ import saved from '../../../images/saved.svg';
 import savedleft from '../../../images/Saved Left.svg';
 import savedright from '../../../images/Saved Right.svg';
 import trash from '../../../images/trash.svg';
+import axios from 'axios';
 
 function Cards() {
+  const [loading, setLoading] = useState(true); // Состояние для отслеживания загрузки данных
+  const [error, setError] = useState(null); // Для обработки ошибок
+  const [data, setData] = useState([])
   const [search, setSearch] = useState('');
   const [isFocused, setIsFocused] = useState({
     search: false,
@@ -136,6 +140,25 @@ function Cards() {
     setSwipeDistance(0);
   };
 
+  useEffect(() => {
+    axios.get("http://localhost:8081/api/resumes/getAllResume", {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "uuid": "0a2c2124-b906-4d82-9b5f-2d6138383a0a",
+      },
+    })
+      .then(response => {
+        setData(response?.data); // Устанавливаем полученные данные
+        setLoading(false); // Завершаем процесс загрузки
+      })
+      .catch(err => {
+        setError('Ошибка загрузки данных'); // Обрабатываем ошибку
+        setLoading(false); // Завершаем процесс загрузки
+      });
+
+      console.log(data?.resume)
+  }, []);
+
   return (
     <div className={styles.cards}>
       <div className={`${styles.cards__container} _container`}>
@@ -171,7 +194,7 @@ function Cards() {
         </div>
 
         <div className={styles.cards__main__block}>
-          {cardData.map((card, index) => (
+          {data?.resume?.map((card, index) => (
             <div
               key={index}
               className={styles.card}
@@ -182,19 +205,16 @@ function Cards() {
             >
               <div className={styles.card__container}>
                 <div className={styles.card__fio__rate}>
-                  <div className={styles.fio}>{card.fio}</div>
+                  <div className={styles.fio}>{card.name}</div>
                   <div
                     className={styles.rate}
-                    style={getColor(card.rate)}
+                    style={getColor(card.sum)}
                   >
-                    {card.rate}
+                    {card.sum.toFixed(1)}
                   </div>
                 </div>
                 <div className={styles.card__crucial__info}>
-                  Специализации: Руководитель проектов
-                  Занятость: полная занятость
-                  График работы: полный день
-                  Желательное время в пути до работы: не более часа
+                  {card?.desciption}
                 </div>
               </div>
 
