@@ -138,18 +138,18 @@
 
 
 
-.saved__left {
+.saved__left, .saved__right {
     position: absolute;
-    left: -25px;
     top: 45px;
     z-index: -1;
 }
 
+.saved__left {
+    left: -25px;
+}
+
 .saved__right {
-    position: absolute;
     right: -25px;
-    top: 45px;
-    z-index: -1;
 }
 
 .deleteButton {

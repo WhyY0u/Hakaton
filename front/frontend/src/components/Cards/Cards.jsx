@@ -108,13 +108,32 @@ function Cards() {
   };
 
   // Обработчик для двойного клика по карточке
-  const handleCardDoubleClick = (index) => {
-    if (favorites.includes(index)) {
-      setFavorites(favorites.filter((fav) => fav !== index));
-      console.log(`Карточка ${index + 1} удалена из избранного.`);
-    } else {
-      setFavorites([...favorites, index]);
-      console.log(`Карточка ${index + 1} добавлена в избранное.`);
+  const handleCardDoubleClick = async (index) => {
+    const card = data?.resume[index]; // Получаем данные карточки по индексу
+    const id = localStorage.getItem("id"); // Получаем uuid из localStorage
+  
+    try {
+      if (favorites.includes(index)) {
+        // Если карточка уже в избранном, удаляем ее из избранного с помощью DELETE
+        await axios.delete("http://localhost:8081/api/resumes/favorites/remove", {
+          headers: {
+            uuid: id,      // Передаем uuid пользователя
+            id: card.id,   // Передаем id карточки для удаления
+          },
+        });
+        setFavorites(favorites.filter((fav) => fav !== index)); // Обновляем локальное состояние
+        console.log(`Карточка ${index + 1} удалена из избранного.`);
+      } else {
+        // Если карточка не в избранном, добавляем ее с помощью POST
+        await axios.post("http://localhost:8081/api/resumes/favorites/add", {
+          resume_id: card.id, // Отправляем идентификатор карточки
+          uuid: id
+        });
+        setFavorites([...favorites, index]); // Обновляем локальное состояние
+        console.log(`Карточка ${index + 1} добавлена в избранное.`);
+      }
+    } catch (error) {
+      console.error("Ошибка при добавлении/удалении из избранного:", error);
     }
   };
 
@@ -140,7 +159,6 @@ function Cards() {
     setSwipeDistance(0);
   };
 
-  console.log(localStorage.getItem('id'))
   useEffect(() => {
     const id = localStorage.getItem("id");
 
