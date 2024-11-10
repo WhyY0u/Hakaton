@@ -1,0 +1,86 @@
+
+
+.not__loaded {
+    background: rgba(0, 0, 0, 0.23);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    backdrop-filter: blur(23px);
+    max-width: 255px;
+    margin: 0 auto;
+    transform: translateY(100%);
+    animation: downSlideIn 1s forwards;
+    margin-top: 40px;
+    backdrop-filter: blur(14px);
+
+}
+
+.not__loaded__text__block {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-family: 'Inter';
+    font-weight: 600;
+    text-align: center;
+    font-size: 16px;
+}
+
+.not__loaded__text__block__question {
+    font-family: "Inter";
+    text-align: center;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 16px;
+}
+
+.not__loaded__text__block__parg {
+    font-family: "Inter";
+    color: rgba(255, 255, 255, 0.39);
+    max-width: 190px;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.not__loaded__input {
+    background-color: rgba(0, 0, 0, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.36);    
+    border-radius: 8px; 
+    color: rgba(255, 255, 255, 0.72);
+    padding: 10px;
+    font-family: Inter;
+    font-size: 12px;
+    font-weight: 300;
+    width: 90%;
+}
+
+.not__loaded__input::placeholder {
+    color: rgba(240, 240, 240, 0.6);
+    font-family: Inter;
+    font-size: 12px;
+    font-weight: 300;
+}
+
+.not__loaded__button__signin {
+    font-family: 'Inter';
+    padding: 12px 35px;
+    background-color: rgba(16, 68, 230, 0.64);
+    color: #FFFFFF;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+
+@keyframes downSlideIn {
+    0% {
+        transform: translateY(100%);
+        opacity: 0; 
+    }
+    100% {
+        transform: translateY(0); 
+        opacity: 1; 
+    }
+}
