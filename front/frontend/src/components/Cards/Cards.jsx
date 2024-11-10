@@ -140,23 +140,30 @@ function Cards() {
     setSwipeDistance(0);
   };
 
+  console.log(localStorage.getItem('id'))
   useEffect(() => {
+    const id = localStorage.getItem("id");
+
+    if (!id) {
+      setError("ID не найден. Пожалуйста, авторизуйтесь.");
+      return;
+    }
+
     axios.get("http://localhost:8081/api/resumes/getAllResume", {
       headers: {
         "Content-Type": "multipart/form-data",
-        "uuid": "0a2c2124-b906-4d82-9b5f-2d6138383a0a",
+        "uuid": id,
       },
     })
       .then(response => {
         setData(response?.data); // Устанавливаем полученные данные
         setLoading(false); // Завершаем процесс загрузки
+        console.log(response?.data)
       })
       .catch(err => {
         setError('Ошибка загрузки данных'); // Обрабатываем ошибку
         setLoading(false); // Завершаем процесс загрузки
       });
-
-      console.log(data?.resume)
   }, []);
 
   return (
